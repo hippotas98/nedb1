@@ -1,96 +1,128 @@
 const Datastore = require("nedb");
 const Users = new Datastore({ filename: "users.db", autoload: true });
 
-const InsertSampleUsers = async (start,limit) => {
-    let listUsers = []
-    for(var i = start;i<=limit;++i){
-        let randomName = "Hello";
-        let randomNumber = i;
+const Insert =  number => {
+  let start = Date.now();
+  let objs = [];
+  //console.log(number);
+  const run = () => {
+    for (let i = 1; i <= number; ++i) {
+      
+      setImmediate(() => {
         let user = {
-            Name: randomName,
-            _id: randomNumber,
-            Class: {
-                _id: randomNumber,
-                userId: randomNumber
-            }
-        }
-        listUsers.push(user);
+          k: i,
+          c: makeRandomNumber(), 
+          name: {
+            c: makeRandomNumber()
+          }
+        };
+        Users.insert(user, err => {
+          if (err) console.log(err);
+          if (i >= number) {
+            objs.push(user);
+            console.log(`Take ${Date.now() - start}`);
+            return objs;
+          }
+        });
+          
+      });
     }
-    let startTime = Date.now();
-    await Users.insert(listUsers, (err, docs) => {
-        docs.forEach(d => {
-          //console.log(d.Phone)
+  }
+  run();
+  
+};
+const BulkInsert = number => {
+  let start = Date.now();
+  let objs = [];
+
+  console.log(number);
+  const run = () => {
+    
+    for (let i = 1; i <= number; i = i+100) {
+      let incr = number - i < 100 ? number - i : 100;
+      let users = [];
+      for (let j = i; j < i + incr; ++j) {
+        users.push({
+          k: j,
+          c: makeRandomNumber(),
+          name: {
+            c: makeRandomNumber()
+          }
+        });
+      }
+      setImmediate(() => {
+        Users.insert(users, err => {
+          if (err) console.log(err);
+          //console.log(i)
+          users=[]
+          if (i >= number - incr) {
+            console.log(`Take ${Date.now() - start}`);
+            return objs;
+          }
+          //users = [];
         });
       });
-    return Date.now()-startTime;
-}
-const Insert = async () => {
-    let start = 1;
-    let userNumPerInsert = 100000;
-    var totalMilSeconds = 0;
-    for(start, totalMilSeconds; start < 100000000; start += userNumPerInsert ){
-      let time = await InsertSampleUsers(start, start - 1 + userNumPerInsert)
-      totalMilSeconds += time;
-      console.log(`Start: ${start}, Take: ${totalMilSeconds}`)
     }
-    return totalMilSeconds;
-}
-const Get = async(min, max) => {
+  };
+  run();
+};
+const Get = async (min, max) => {
   let start = Date.now();
-  var iter = 0;
-  console.log("Start at: ", start);
-  await Users.find({ _id: { $lte: max, $gte: min } }, (err, docs) => {
-    docs.forEach(d => {
-      console.log(d._id, " ", d.Name);
-      //iter += 1
-    });
-    iter = docs.length;
+  //console.log("Start at: ", start);
+  console.log(min + ' ' + max)
+  await Users.find({ 'k': {$gte: min, $lte: max} }, (err, docs) => {
     if (err) console.log(err);
-  });
-  let end = Date.now();
-  return end - start;
+    console.log(docs.length)
+    for(let doc of docs){
+      console.log(doc.k + ' '+doc.c)
+    }
+    
+    console.log(`Total Time: ${Date.now()-start}`)
+    return docs;
+  });  
 }
-const Update = async(min, max) => {
-  let start = Date.now();
-  console.log("Start at: ", start);
-  await Users.update(
-    { _id: { $lte: max, $gte: min } },
-    { $set: { Name: "Updated" } },
+const Update = (min, max) => {
+  let objs = []
+  let start = Date.now()
+   Users.update(
+    { k: { $lte: max, $gte: min } },
+    { $set: { c: "0" } },
     (err, docs) => {
       docs.forEach(d => {
-        console.log(d._id, " ", d.Name);
+        console.log(d.c);
         // iter += 1
+        objs += d
       });
       console.log(docs.length)
+      console.log(`Total Time: ${Date.now()-start}`)
+      return docs;
       if (err) console.log(err)
     }
   );
-  let end = Date.now()
-  return end - start
 }
-const Delete = async (min, max) => {
-      let start = Date.now()
-  console.log("Start at: ", start)
-  await Users.remove(
-    { _id: { $lte: max, $gte: min } },
+const Delete =  (min, max) => {
+  let start = Date.now();
+   Users.remove(
+    { k: { $lte: max, $gte: min } },
     { multi: true },
     (err, docs) => {
       docs.forEach(d => {
-        console.log(d._id, " ", d.Name);
+        console.log(d.k, " ", d.c);
         // iter += 1
       });
       console.log(docs.length)
       if (err) console.log(err)
+      console.log(`Total Time: ${Date.now()-start}`)
+      return true;
     }
   );
-  let end = Date.now();
-  return end - start
+  
 }
 function makeRandomNumber() {
     var text = "";
     var possible = "0123456789";
   
-    for (var i = 0; i < 2; i++)
+    for (var i = 0; i < 10; i++)
       text += possible.charAt(Math.floor(Math.random() * possible.length));
   
     return text;
@@ -98,6 +130,7 @@ function makeRandomNumber() {
   
 module.exports = {
     InsertUsers: Insert,
+    BulkInsertUsers: BulkInsert,
     GetUsers: Get,
     UpdateUsers: Update,
     DeleteUsers: Delete

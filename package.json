@@ -3,9 +3,10 @@
   "version": "0.0.0",
   "private": true,
   "scripts": {
-    "start": "node-dev --max-old-space-size=12260 app.js "
+    "start": "node-dev app.js "
   },
   "dependencies": {
+    "async": "^2.6.1",
     "cookie-parser": "~1.4.3",
     "debug": "~2.6.9",
     "express": "~4.16.0",
