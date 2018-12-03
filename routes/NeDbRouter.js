@@ -5,46 +5,29 @@ const async = require('async')
 const router = express.Router();
 
 router.post("/:number", (req, res, next) => {
-  let num = req.params.number
-  //console.log(num)
-  async.waterfall([nedbservice.InsertUsers(num) 
-  , (results) => res.send(results)], (err) => {
-    if(err) console.log(err)
-    
-  })
+  console.log('Insert')
+  nedbservice.InsertUsers(req, res)
 });
 
-router.post("/bulk/:number", async (req, res, next) => {
-  let num = req.params.number
-  
-  async.waterfall([
-    nedbservice.BulkInsertUsers(num)
-   
-  , (results) => res.send(results)], (err) => {
-    if(err) console.log(err)
-    
-  })
+router.post("/bulk/:number", (req, res, next) => {
+  console.log('Bulk Insert')
+  nedbservice.BulkInsertUsers(req, res)
 });
 
-router.get("/:min/:max", async (req, res, next) => {
-  let min = req.params.min
-  let max = req.params.max
-  let objs = await nedbservice.GetUsers(min, max)
-  res.send(objs);
+router.get("/:min/:max", (req, res, next) => {
+  console.log('Get')
+  nedbservice.GetUsers(req, res);
 });
 
-router.put("/:min/:max", async (req, res, next) => {
-  let min = req.params.min;
-  let max = req.params.max;
-  let objs = await nedbservice.UpdateUsers(min, max)
-  res.send(objs);
+router.put("/:min/:max", (req, res, next) => {
+  console.log('Update')
+  nedbservice.UpdateUsers(req, res)
+ 
 });
 
-router.delete("/:min/:max", async (req, res, next) => {
-  let min = req.params.min;
-  let max = req.params.max;
-  let objs = await nedbservice.DeleteUsers(min, max)
-  res.send(objs);
+router.delete("/:min/:max",  (req, res, next) => {
+  console.log('Delete')
+  nedbservice.DeleteUsers(req, res)
 });
 
 module.exports = router;

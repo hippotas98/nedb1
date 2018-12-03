@@ -1,9 +1,9 @@
 const Datastore = require("nedb");
 const Users = new Datastore({ filename: "users.db", autoload: true });
 
-const Insert =  number => {
+const Insert =  (req, res) => {
+  let number = req.params.number
   let start = Date.now();
-  let objs = [];
   //console.log(number);
   const run = () => {
     for (let i = 1; i <= number; ++i) {
@@ -19,9 +19,9 @@ const Insert =  number => {
         Users.insert(user, err => {
           if (err) console.log(err);
           if (i >= number) {
-            objs.push(user);
-            console.log(`Take ${Date.now() - start}`);
-            return objs;
+            let time =  Date.now() - start
+            console.log(`Take ${time}`)
+            res.send(`Take ${time}`)
           }
         });
           
@@ -31,9 +31,9 @@ const Insert =  number => {
   run();
   
 };
-const BulkInsert = number => {
+const BulkInsert = (req, res) => {
+  let number = req.params.number
   let start = Date.now();
-  let objs = [];
 
   console.log(number);
   const run = () => {
@@ -56,8 +56,9 @@ const BulkInsert = number => {
           //console.log(i)
           users=[]
           if (i >= number - incr) {
-            console.log(`Take ${Date.now() - start}`);
-            return objs;
+            let time = Date.now() - start
+            console.log(`Take ${time}`);
+            res.send(`Take ${time}`)
           }
           //users = [];
         });
@@ -66,54 +67,54 @@ const BulkInsert = number => {
   };
   run();
 };
-const Get = async (min, max) => {
+const Get = async (req, res, cb) => {
+  let min = req.params.min
+  let max = req.params.max
   let start = Date.now();
   //console.log("Start at: ", start);
   console.log(min + ' ' + max)
-  await Users.find({ 'k': {$gte: min, $lte: max} }, (err, docs) => {
+  await Users.find({k: {$gte: parseInt(min), $lte: parseInt(max)}}, (err, docs) => {
     if (err) console.log(err);
     console.log(docs.length)
     for(let doc of docs){
       console.log(doc.k + ' '+doc.c)
     }
-    
     console.log(`Total Time: ${Date.now()-start}`)
-    return docs;
+    res.send(docs)
+    
   });  
 }
-const Update = (min, max) => {
-  let objs = []
+const Update = (req, res) => {
+  let min = req.params.min
+  let max = req.params.max
   let start = Date.now()
    Users.update(
-    { k: { $lte: max, $gte: min } },
+    { k: { $lte: parseInt(max), $gte: parseInt(min) } },
     { $set: { c: "0" } },
-    (err, docs) => {
-      docs.forEach(d => {
-        console.log(d.c);
-        // iter += 1
-        objs += d
-      });
-      console.log(docs.length)
-      console.log(`Total Time: ${Date.now()-start}`)
-      return docs;
+    { multi: true},
+    (err, numReplaced) => {
       if (err) console.log(err)
+      // for(let doc of docs)
+      //   console.log(doc.k + ' ' + doc.c)
+      console.log(numReplaced)
+      console.log(`Total Time: ${Date.now()-start}`)
+      res.send(`Update ${numReplaced} objects`)
+      
     }
   );
 }
-const Delete =  (min, max) => {
+const Delete =  (req, res) => {
+  let min = req.params.min
+  let max = req.params.max
   let start = Date.now();
    Users.remove(
-    { k: { $lte: max, $gte: min } },
+    { k: { $lte: parseInt(max), $gte: parseInt(min) } },
     { multi: true },
-    (err, docs) => {
-      docs.forEach(d => {
-        console.log(d.k, " ", d.c);
-        // iter += 1
-      });
-      console.log(docs.length)
+    (err, numRemoved) => {
       if (err) console.log(err)
+      console.log(numRemoved)
       console.log(`Total Time: ${Date.now()-start}`)
-      return true;
+      res.send(`Delete ${numRemoved} objects`)
     }
   );
   
