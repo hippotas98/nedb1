@@ -4,7 +4,7 @@ const Users = new Datastore({ filename: "users.db", autoload: true });
 const Insert = (req, res) => {
   let number = req.params.number
   let start = Date.now();
-  //console.log(number);
+  console.log(number);
   const run = () => {
     for (let i = 1; i <= number; ++i) {
 
@@ -73,9 +73,27 @@ const Get = (req, res) => {
   let start = Date.now();
   //console.log("Start at: ", start);
   console.log(min + ' ' + max)
-  Users.ensureIndex({ 'fieldName': 'k', 'unique': true }, (err) => {
+  Users.ensureIndex({ 'fieldName': '_id', 'unique': true }, (err) => {
     if (err) console.log(err)
     Users.find({ k: { $gte: parseInt(min), $lte: parseInt(max) } }, (err, docs) => {
+      if (err) console.log(err);
+      console.log(docs.length)
+      let time = Date.now() - start
+      console.log(`Total Time: ${time}`)
+      res.send({ results: docs, time: time })
+
+    });
+  })
+
+}
+const GetAll = (req, res) => {
+  
+  let start = Date.now();
+  //console.log("Start at: ", start);
+  console.log(min + ' ' + max)
+  Users.ensureIndex({ 'fieldName': '_id', 'unique': true }, (err) => {
+    if (err) console.log(err)
+    Users.find({  }, (err, docs) => {
       if (err) console.log(err);
       console.log(docs.length)
       let time = Date.now() - start
@@ -90,7 +108,7 @@ const Update = (req, res) => {
   let min = req.params.min
   let max = req.params.max
   let start = Date.now()
-  Users.ensureIndex({ 'fieldName': 'k', 'unique': true }, (err) => {
+  Users.ensureIndex({ 'fieldName': '_id', 'unique': true }, (err) => {
     if (err) console.log(err)
     Users.update(
       { k: { $lte: parseInt(max), $gte: parseInt(min) } },
@@ -114,7 +132,7 @@ const Delete = (req, res) => {
   let min = req.params.min
   let max = req.params.max
   let start = Date.now();
-  Users.ensureIndex({ 'fieldName': 'k', 'unique': true }, (err) => {
+  Users.ensureIndex({ 'fieldName': '_id', 'unique': true }, (err) => {
     if (err) console.log(err)
     Users.remove(
       { k: { $lte: parseInt(max), $gte: parseInt(min) } },
@@ -144,6 +162,7 @@ module.exports = {
   InsertUsers: Insert,
   BulkInsertUsers: BulkInsert,
   GetUsers: Get,
+  GetAllUsers: GetAll,
   UpdateUsers: Update,
   DeleteUsers: Delete
 };
