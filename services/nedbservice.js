@@ -1,17 +1,17 @@
 const Datastore = require("nedb");
 const Users = new Datastore({ filename: "users.db", autoload: true });
 
-const Insert =  (req, res) => {
+const Insert = (req, res) => {
   let number = req.params.number
   let start = Date.now();
   //console.log(number);
   const run = () => {
     for (let i = 1; i <= number; ++i) {
-      
+
       setImmediate(() => {
         let user = {
           k: i,
-          c: makeRandomNumber(), 
+          c: makeRandomNumber(),
           name: {
             c: makeRandomNumber()
           }
@@ -19,17 +19,17 @@ const Insert =  (req, res) => {
         Users.insert(user, err => {
           if (err) console.log(err);
           if (i >= number) {
-            let time =  Date.now() - start
+            let time = Date.now() - start
             console.log(`Take ${time}`)
             res.send(`Take ${time}`)
           }
         });
-          
+
       });
     }
   }
   run();
-  
+
 };
 const BulkInsert = (req, res) => {
   let number = req.params.number
@@ -37,8 +37,8 @@ const BulkInsert = (req, res) => {
 
   //console.log(number);
   const run = () => {
-    
-    for (let i = 1; i <= number; i = i+100) {
+
+    for (let i = 1; i <= number; i = i + 100) {
       let incr = number - i < 100 ? number - i : 100;
       let users = [];
       for (let j = i; j < i + incr; ++j) {
@@ -54,7 +54,7 @@ const BulkInsert = (req, res) => {
         Users.insert(users, err => {
           if (err) console.log(err);
           //console.log(i)
-          users=[]
+          users = []
           if (i >= number - incr) {
             let time = Date.now() - start
             console.log(`Take ${time}`);
@@ -67,77 +67,83 @@ const BulkInsert = (req, res) => {
   };
   run();
 };
-const Get = async (req, res) => {
+const Get = (req, res) => {
   let min = req.params.min
   let max = req.params.max
   let start = Date.now();
   //console.log("Start at: ", start);
   console.log(min + ' ' + max)
-  await Users.find({k: {$gte: parseInt(min), $lte: parseInt(max)}}, (err, docs) => {
-    if (err) console.log(err);
-    console.log(docs.length)
-    for(let doc of docs){
-      console.log(doc.k + ' '+doc.c)
-    }
-    let time = Date.now()-start
-    console.log(`Total Time: ${time}`)
-    res.send({results: docs, time: time })
-    
-  });  
+  Users.ensureIndex({ 'fieldName': 'k', 'unique': true }, (err) => {
+    if (err) console.log(err)
+    Users.find({ k: { $gte: parseInt(min), $lte: parseInt(max) } }, (err, docs) => {
+      if (err) console.log(err);
+      console.log(docs.length)
+      let time = Date.now() - start
+      console.log(`Total Time: ${time}`)
+      res.send({ results: docs, time: time })
+
+    });
+  })
+
 }
 const Update = (req, res) => {
   let min = req.params.min
   let max = req.params.max
   let start = Date.now()
-   Users.update(
-    { k: { $lte: parseInt(max), $gte: parseInt(min) } },
-    { $set: { c: "0" } },
-    { multi: true},
-    (err, numReplaced) => {
-      if (err) console.log(err)
-      Users.persistence.compactDatafile()
-      // for(let doc of docs)
-      //   console.log(doc.k + ' ' + doc.c)
-      console.log(numReplaced)
-      let time = Date.now()-start;
-      console.log(`Total Time: ${time}`)
-      res.send({numReplaced: numReplaced, time:time })
-      
-    }
-  );
+  Users.ensureIndex({ 'fieldName': 'k', 'unique': true }, (err) => {
+    if (err) console.log(err)
+    Users.update(
+      { k: { $lte: parseInt(max), $gte: parseInt(min) } },
+      { $set: { c: "0" } },
+      { multi: true },
+      (err, numReplaced) => {
+        if (err) console.log(err)
+        Users.persistence.compactDatafile()
+        // for(let doc of docs)
+        //   console.log(doc.k + ' ' + doc.c)
+        console.log(numReplaced)
+        let time = Date.now() - start;
+        console.log(`Total Time: ${time}`)
+        res.send({ numReplaced: numReplaced, time: time })
+
+      }
+    );
+  });
 }
-const Delete =  (req, res) => {
+const Delete = (req, res) => {
   let min = req.params.min
   let max = req.params.max
   let start = Date.now();
-   Users.remove(
-    { k: { $lte: parseInt(max), $gte: parseInt(min) } },
-    { multi: true },
-    (err, numRemoved) => {
-      if (err) console.log(err)
-      Users.persistence.compactDatafile()
-      console.log(numRemoved)
-      let time = Date.now()-start
-      console.log(`Total Time: ${time}`)
-      res.send({numRemoved: numRemoved, time:time })
-    }
-  );
-  
+  Users.ensureIndex({ 'fieldName': 'k', 'unique': true }, (err) => {
+    if (err) console.log(err)
+    Users.remove(
+      { k: { $lte: parseInt(max), $gte: parseInt(min) } },
+      { multi: true },
+      (err, numRemoved) => {
+        if (err) console.log(err)
+        Users.persistence.compactDatafile()
+        console.log(numRemoved)
+        let time = Date.now() - start
+        console.log(`Total Time: ${time}`)
+        res.send({ numRemoved: numRemoved, time: time })
+      }
+    );
+  });
 }
 function makeRandomNumber() {
-    var text = "";
-    var possible = "0123456789";
-  
-    for (var i = 0; i < 10; i++)
-      text += possible.charAt(Math.floor(Math.random() * possible.length));
-  
-    return text;
-  }
-  
+  var text = "";
+  var possible = "0123456789";
+
+  for (var i = 0; i < 10; i++)
+    text += possible.charAt(Math.floor(Math.random() * possible.length));
+
+  return text;
+}
+
 module.exports = {
-    InsertUsers: Insert,
-    BulkInsertUsers: BulkInsert,
-    GetUsers: Get,
-    UpdateUsers: Update,
-    DeleteUsers: Delete
+  InsertUsers: Insert,
+  BulkInsertUsers: BulkInsert,
+  GetUsers: Get,
+  UpdateUsers: Update,
+  DeleteUsers: Delete
 };
