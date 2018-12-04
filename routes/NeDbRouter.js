@@ -13,7 +13,10 @@ router.post("/bulk/:number", (req, res, next) => {
   console.log('Bulk Insert')
   nedbservice.BulkInsertUsers(req, res)
 });
-
+router.get("/", (req, res, next) => {
+  console.log('GetAll')
+  nedbservice.GetAll(req, res);
+});
 router.get("/:min/:max", (req, res, next) => {
   console.log('Get')
   nedbservice.GetUsers(req, res);
