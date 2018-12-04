@@ -35,7 +35,7 @@ const BulkInsert = (req, res) => {
   let number = req.params.number
   let start = Date.now();
 
-  console.log(number);
+  //console.log(number);
   const run = () => {
     
     for (let i = 1; i <= number; i = i+100) {
@@ -67,7 +67,7 @@ const BulkInsert = (req, res) => {
   };
   run();
 };
-const Get = async (req, res, cb) => {
+const Get = async (req, res) => {
   let min = req.params.min
   let max = req.params.max
   let start = Date.now();
@@ -79,8 +79,9 @@ const Get = async (req, res, cb) => {
     for(let doc of docs){
       console.log(doc.k + ' '+doc.c)
     }
-    console.log(`Total Time: ${Date.now()-start}`)
-    res.send(docs)
+    let time = Date.now()-start
+    console.log(`Total Time: ${time}`)
+    res.send({results: docs, time: time })
     
   });  
 }
@@ -94,11 +95,13 @@ const Update = (req, res) => {
     { multi: true},
     (err, numReplaced) => {
       if (err) console.log(err)
+      Users.persistence.compactDatafile()
       // for(let doc of docs)
       //   console.log(doc.k + ' ' + doc.c)
       console.log(numReplaced)
-      console.log(`Total Time: ${Date.now()-start}`)
-      res.send(`Update ${numReplaced} objects`)
+      let time = Date.now()-start;
+      console.log(`Total Time: ${time}`)
+      res.send({numReplaced: numReplaced, time:time })
       
     }
   );
@@ -112,9 +115,11 @@ const Delete =  (req, res) => {
     { multi: true },
     (err, numRemoved) => {
       if (err) console.log(err)
+      Users.persistence.compactDatafile()
       console.log(numRemoved)
-      console.log(`Total Time: ${Date.now()-start}`)
-      res.send(`Delete ${numRemoved} objects`)
+      let time = Date.now()-start
+      console.log(`Total Time: ${time}`)
+      res.send({numRemoved: numRemoved, time:time })
     }
   );
   
