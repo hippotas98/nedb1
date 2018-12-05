@@ -37,9 +37,9 @@ const BulkInsert = (req, res) => {
 
   //console.log(number);
   const run = () => {
-
-    for (let i = 1; i <= number; i = i + 100) {
-      let incr = number - i < 100 ? number - i : 100;
+    let base = 100
+    for (let i = 1; i <= number; i = i + base) {
+      let incr = number - i < base-1 ? number - i : base;
       let users = [];
       for (let j = i; j < i + incr; ++j) {
         users.push({
@@ -58,7 +58,11 @@ const BulkInsert = (req, res) => {
           if (i >= number - incr) {
             let time = Date.now() - start
             console.log(`Take ${time}`);
-            res.send(`Take ${time}`)
+            // Users.ensureIndex({fieldName: 'k', unique: false}, (err)=>{
+            //   if(err) console.log(err)
+              res.send(`Take ${time}`)
+            //})
+            
           }
           //users = [];
         });
@@ -70,17 +74,18 @@ const BulkInsert = (req, res) => {
 const Get = (req, res) => {
   let min = req.params.min
   let max = req.params.max
-  let start = Date.now();
+  
   //console.log("Start at: ", start);
-  console.log(min + ' ' + max)
-  Users.ensureIndex({ 'fieldName': '_id', 'unique': true }, (err) => {
+  //console.log(min + ' ' + max)
+  Users.ensureIndex({ fieldName: "k",unique:false, sparse: true }, (err) => {
     if (err) console.log(err)
+    let start = Date.now();
     Users.find({ k: { $gte: parseInt(min), $lte: parseInt(max) } }, (err, docs) => {
       if (err) console.log(err);
       console.log(docs.length)
       let time = Date.now() - start
       console.log(`Total Time: ${time}`)
-      res.send({ results: docs, time: time })
+      res.send({ results: docs.length, time: time })
 
     });
   })
@@ -88,12 +93,13 @@ const Get = (req, res) => {
 }
 const GetAll = (req, res) => {
   
-  let start = Date.now();
+  
   //console.log("Start at: ", start);
-  console.log(min + ' ' + max)
-  Users.ensureIndex({ 'fieldName': '_id', 'unique': true }, (err) => {
+  //console.log(min + ' ' + max)
+  Users.ensureIndex({ fieldName: "k",unique:false, sparse: true}, (err) => {
     if (err) console.log(err)
-    Users.find({  }, (err, docs) => {
+    let start = Date.now();
+    Users.find({}, (err, docs) => {
       if (err) console.log(err);
       console.log(docs.length)
       let time = Date.now() - start
@@ -107,9 +113,10 @@ const GetAll = (req, res) => {
 const Update = (req, res) => {
   let min = req.params.min
   let max = req.params.max
-  let start = Date.now()
-  Users.ensureIndex({ 'fieldName': '_id', 'unique': true }, (err) => {
+  
+  Users.ensureIndex({ fieldName: "k",unique:false, sparse: true}, (err) => {
     if (err) console.log(err)
+    let start = Date.now()
     Users.update(
       { k: { $lte: parseInt(max), $gte: parseInt(min) } },
       { $set: { c: "0" } },
@@ -131,9 +138,10 @@ const Update = (req, res) => {
 const Delete = (req, res) => {
   let min = req.params.min
   let max = req.params.max
-  let start = Date.now();
-  Users.ensureIndex({ 'fieldName': '_id', 'unique': true }, (err) => {
+  
+  Users.ensureIndex({ fieldName: "k",unique:false, sparse: true }, (err) => {
     if (err) console.log(err)
+    let start = Date.now();
     Users.remove(
       { k: { $lte: parseInt(max), $gte: parseInt(min) } },
       { multi: true },

@@ -15,7 +15,7 @@ router.post("/bulk/:number", (req, res, next) => {
 });
 router.get("/", (req, res, next) => {
   console.log('GetAll')
-  nedbservice.GetAll(req, res);
+  nedbservice.GetAllUsers(req, res);
 });
 router.get("/:min/:max", (req, res, next) => {
   console.log('Get')
